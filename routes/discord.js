@@ -2,7 +2,9 @@ const express = require('express');
 const router = express.Router();
 const cors = require('cors');
 let allowedOrigins = [
-    'http://localhost:3200',
+    'http://localhost:3000',
+    'http://localhost:4200',
+    'http://127.0.0.1',
     'https://khaidev.vercel.app',
     'https://lamdev.vercel.app',
     'https://noflexzone.vercel.app'

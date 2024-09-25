@@ -1,7 +1,7 @@
 const axios = require('axios');
 const parser = new (require('rss-parser'))();
 
-const lastestVideo = async (req, res) => {
+const latestVideo = async (req, res) => {
     const key = req.params.key;
     const channelId = req.params.id;
     try {
@@ -34,4 +34,4 @@ const lastestVideo = async (req, res) => {
     }
 }
 
-module.exports = lastestVideo;
+module.exports = latestVideo;

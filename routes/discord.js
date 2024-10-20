@@ -7,7 +7,8 @@ let allowedOrigins = [
     'http://127.0.0.1',
     'https://khaidev.vercel.app',
     'https://lamdev.vercel.app',
-    'https://noflexzone.vercel.app'
+    'https://noflexzone.vercel.app',
+    'https://ponnat.life'
 ]
 var corsOptions = {
     origin: function (origin, callback) {

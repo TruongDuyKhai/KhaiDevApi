@@ -7,6 +7,8 @@ const index = async (req, res) => {
 const avatar = async (req, res) => {
     const userId = req.params.id;
     const token = req.query.token || process.env.TOKEN;
+    const fallback = req.query.fallback;
+    const decodedFallback = decodeURIComponent(fallback);
     axios({
         method: "GET",
         url: `https://discord.com/api/v9/users/${userId}/profile`,
@@ -18,7 +20,19 @@ const avatar = async (req, res) => {
             const avatarId = response.data.user.avatar;
 
             if (!avatarId) {
-                res.status(404).send("User has no banner");
+                if(decodedFallback) {
+                    axios.get(decodedFallback, { responseType: 'arraybuffer' })
+                    .then(fallbackResponse => {
+                        const contentType = fallbackResponse.headers['content-type'];
+                        res.setHeader('Content-Type', contentType);
+                        res.send(Buffer.from(fallbackResponse.data, 'binary'));
+                    })
+                    .catch(err => {
+                        res.status(500).send("Error fetching fallback image");
+                    });
+                    return;
+                }
+                res.status(404).send("User has no avatar");
                 return;
             }
 
@@ -97,7 +111,8 @@ const badge = async (req, res) => {
 const banner = async (req, res) => {
     const userId = req.params.id;
     const token = req.query.token || process.env.TOKEN;
-
+    const fallback = req.query.fallback;
+    const decodedFallback = decodeURIComponent(fallback);
     axios({
       method: "GET",
       url: `https://discord.com/api/v9/users/${userId}/profile`,
@@ -109,6 +124,20 @@ const banner = async (req, res) => {
         const bannerId = response.data.user.banner;
   
         if (!bannerId) {
+            if(decodedFallback) {
+                if(decodedFallback) {
+                    axios.get(decodedFallback, { responseType: 'arraybuffer' })
+                    .then(fallbackResponse => {
+                        const contentType = fallbackResponse.headers['content-type'];
+                        res.setHeader('Content-Type', contentType);
+                        res.send(Buffer.from(fallbackResponse.data, 'binary'));
+                    })
+                    .catch(err => {
+                        res.status(500).send("Error fetching fallback image");
+                    });
+                    return;
+                }
+            }
           res.status(404).send("User has no banner");
           return;
         }

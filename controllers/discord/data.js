@@ -75,10 +75,12 @@ const avatar = async (req, res) => {
                         "Content-Type": "image/*",
                     },
                 }).then(fallbackResponse => {
-                    const contentType = fallbackResponse.headers['content-type'];
-                    res.setHeader('Content-Type', contentType);
+                    for (let key in fallbackResponse.headers) {
+                        res.setHeader(key, fallbackResponse.headers[key]);
+                    }
                     res.send(Buffer.from(fallbackResponse.data, 'binary'));
                 }).catch(err => {
+                    console.error("Request Error:", err.message);
                     res.status(500).send("Error fetching fallback image");
                 });
                 return;
@@ -98,8 +100,9 @@ const avatar = async (req, res) => {
             if (response.status !== 200) {
                 throw new Error(`Network response was not ok. Status: ${response.status} ${response.statusText}`);
             }
-            const contentType = response.headers["content-type"];
-            res.setHeader('Content-Type', contentType);
+            for(let key in response.headers) {
+                res.setHeader(key, response.headers[key]);
+            }
             res.send(Buffer.from(response.data, 'binary'));
         }).catch(err => {
             console.error("Request Error:", err.message);
@@ -135,10 +138,12 @@ const banner = async (req, res) => {
                         "Content-Type": "image/*",
                     },
                 }).then(fallbackResponse => {
-                    const contentType = fallbackResponse.headers['content-type'];
-                    res.setHeader('Content-Type', contentType);
+                    for (let key in fallbackResponse.headers) {
+                        res.setHeader(key, fallbackResponse.headers[key]);
+                    }
                     res.send(Buffer.from(fallbackResponse.data, 'binary'));
                 }).catch(err => {
+                    console.error("Request Error:", err.message);
                     res.status(500).send("Error fetching fallback image");
                 });
                 return;
@@ -158,8 +163,9 @@ const banner = async (req, res) => {
             if (response.status !== 200) {
                 throw new Error(`Network response was not ok. Status: ${response.status} ${response.statusText}`);
             }
-            const contentType = response.headers["content-type"];
-            res.setHeader('Content-Type', contentType);
+            for(let key in response.headers) {
+                res.setHeader(key, response.headers[key]);
+            }
             res.send(Buffer.from(response.data, 'binary'));
         }).catch(err => {
             console.error("Request Error:", err.message);

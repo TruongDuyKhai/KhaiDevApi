@@ -40,7 +40,7 @@ const avatar = async (req, res) => {
                                 extension = "jpg";
                             }
                             res.setHeader('Content-Type', contentType);
-                            res.send(fallbackResponse.data);
+                            res.send(Buffer.from(fallbackResponse.data, 'binary'));
                         })
                         .catch(err => {
                             res.status(500).send("Error fetching fallback image");
@@ -160,7 +160,7 @@ const banner = async (req, res) => {
                                     extension = "jpg";
                                 }
                                 res.setHeader('Content-Type', contentType);
-                                res.send(fallbackResponse.data);
+                                res.send(Buffer.from(fallbackResponse.data, 'binary'));
                             })
                             .catch(err => {
                                 res.status(500).send("Error fetching fallback image");

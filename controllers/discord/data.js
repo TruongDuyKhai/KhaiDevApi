@@ -20,16 +20,31 @@ const avatar = async (req, res) => {
             const avatarId = response.data.user.avatar;
 
             if (!avatarId) {
-                if(decodedFallback) {
-                    axios.get(decodedFallback, { responseType: 'arraybuffer' })
-                    .then(fallbackResponse => {
-                        const contentType = fallbackResponse.headers['content-type'];
-                        res.setHeader('Content-Type', contentType);
-                        res.send(Buffer.from(fallbackResponse.data, 'binary'));
+                if (fallback) {
+                    axios({
+                        method: "GET",
+                        url: decodedFallback,
+                        responseType: "arraybuffer",
+                        headers: {
+                            "Content-Type": "image/*",
+                        },
                     })
-                    .catch(err => {
-                        res.status(500).send("Error fetching fallback image");
-                    });
+                        .then(fallbackResponse => {
+                            const contentType = response.headers["content-type"];
+                            var extension = "webp";
+                            if (contentType === "image/gif") {
+                                extension = "gif";
+                            } else if (contentType === "image/png") {
+                                extension = "png";
+                            } else if (contentType === "image/jpeg" || contentType === "image/jpg") {
+                                extension = "jpg";
+                            }
+                            res.setHeader('Content-Type', contentType);
+                            res.send(fallbackResponse.data);
+                        })
+                        .catch(err => {
+                            res.status(500).send("Error fetching fallback image");
+                        });
                     return;
                 }
                 res.status(404).send("User has no avatar");
@@ -50,8 +65,7 @@ const avatar = async (req, res) => {
                     }
 
                     const contentType = response.headers["content-type"];
-                    let extension = "webp";
-
+                    var extension = "webp";
                     if (contentType === "image/gif") {
                         extension = "gif";
                     } else if (contentType === "image/png") {
@@ -114,70 +128,85 @@ const banner = async (req, res) => {
     const fallback = req.query.fallback;
     const decodedFallback = decodeURIComponent(fallback);
     axios({
-      method: "GET",
-      url: `https://discord.com/api/v9/users/${userId}/profile`,
-      headers: {
-        "authorization": token,
-      },
+        method: "GET",
+        url: `https://discord.com/api/v9/users/${userId}/profile`,
+        headers: {
+            "authorization": token,
+        },
     })
-      .then(response => {
-        const bannerId = response.data.user.banner;
-  
-        if (!bannerId) {
-            if(decodedFallback) {
-                if(decodedFallback) {
-                    axios.get(decodedFallback, { responseType: 'arraybuffer' })
-                    .then(fallbackResponse => {
-                        const contentType = fallbackResponse.headers['content-type'];
-                        res.setHeader('Content-Type', contentType);
-                        res.send(Buffer.from(fallbackResponse.data, 'binary'));
-                    })
-                    .catch(err => {
-                        res.status(500).send("Error fetching fallback image");
-                    });
-                    return;
+        .then(response => {
+            const bannerId = response.data.user.banner;
+
+            if (!bannerId) {
+                if (fallback) {
+                    if (decodedFallback) {
+                        axios({
+                            method: "GET",
+                            url: decodedFallback,
+                            responseType: "arraybuffer",
+                            headers: {
+                                "Content-Type": "image/*",
+                            },
+                        })
+
+                            .then(fallbackResponse => {
+                                const contentType = response.headers["content-type"];
+                                var extension = "webp";
+                                if (contentType === "image/gif") {
+                                    extension = "gif";
+                                } else if (contentType === "image/png") {
+                                    extension = "png";
+                                } else if (contentType === "image/jpeg" || contentType === "image/jpg") {
+                                    extension = "jpg";
+                                }
+                                res.setHeader('Content-Type', contentType);
+                                res.send(fallbackResponse.data);
+                            })
+                            .catch(err => {
+                                res.status(500).send("Error fetching fallback image");
+                            });
+                        return;
+                    }
                 }
+                res.status(404).send("User has no banner");
+                return;
             }
-          res.status(404).send("User has no banner");
-          return;
-        }
-  
-        axios({
-          method: "GET",
-          url: `https://cdn.discordapp.com/banners/${userId}/${bannerId}?size=2048`,
-          responseType: "arraybuffer",
-          headers: {
-            "Content-Type": "image/*",
-          },
+
+            axios({
+                method: "GET",
+                url: `https://cdn.discordapp.com/banners/${userId}/${bannerId}?size=2048`,
+                responseType: "arraybuffer",
+                headers: {
+                    "Content-Type": "image/*",
+                },
+            })
+                .then(response => {
+                    if (response.status !== 200) {
+                        throw new Error(`Network response was not ok. Status: ${response.status} ${response.statusText}`);
+                    }
+
+                    const contentType = response.headers["content-type"];
+                    var extension = "webp";
+                    if (contentType === "image/gif") {
+                        extension = "gif";
+                    } else if (contentType === "image/png") {
+                        extension = "png";
+                    } else if (contentType === "image/jpeg" || contentType === "image/jpg") {
+                        extension = "jpg";
+                    }
+
+                    res.set("Content-Type", contentType);
+                    res.send(response.data);
+                })
+                .catch(error => {
+                    console.error("Request Error:", error.message);
+                    res.status(500).send("Error retrieving user image");
+                });
         })
-          .then(response => {
-            if (response.status !== 200) {
-              throw new Error(`Network response was not ok. Status: ${response.status} ${response.statusText}`);
-            }
-  
-            const contentType = response.headers["content-type"];
-            let extension = "webp";
-  
-            if (contentType === "image/gif") {
-              extension = "gif";
-            } else if (contentType === "image/png") {
-              extension = "png";
-            } else if (contentType === "image/jpeg" || contentType === "image/jpg") {
-              extension = "jpg";
-            }
-  
-            res.set("Content-Type", contentType);
-            res.send(response.data);
-          })
-          .catch(error => {
+        .catch(error => {
             console.error("Request Error:", error.message);
-            res.status(500).send("Error retrieving user image");
-          });
-      })
-      .catch(error => {
-        console.error("Request Error:", error.message);
-        res.status(500).send("Error retrieving user profile");
-      });
+            res.status(500).send("Error retrieving user profile");
+        });
 }
 
 const profile = async (req, res) => {
@@ -193,10 +222,10 @@ const profile = async (req, res) => {
     }).then(response => {
         return res.send(response.data);
     })
-    .catch(error => {
-        console.error("Request Error:", error.message);
-        return res.status(500).send("Error retrieving user profile");
-    });
+        .catch(error => {
+            console.error("Request Error:", error.message);
+            return res.status(500).send("Error retrieving user profile");
+        });
 }
 
 module.exports = {

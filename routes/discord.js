@@ -27,6 +27,7 @@ router.all('/', (req, res) => {
 router.all('/webhook', require(`${process.cwd()}/controllers/discord/webhook`).index);
 router.post('/webhook/send', require(`${process.cwd()}/controllers/discord/webhook`).send);
 router.get('/transcript', require(`${process.cwd()}/controllers/discord/transcript`));
+router.get('/deco', require(`${process.cwd()}/controllers/discord/deco`));
 router.get('/data', cors(corsOptions), require(`${process.cwd()}/controllers/discord/data`).index);
 router.get('/data/avatar/:id', cors(corsOptions), require(`${process.cwd()}/controllers/discord/data`).avatar);
 router.get('/data/badge/:id', cors(corsOptions), require(`${process.cwd()}/controllers/discord/data`).badge);

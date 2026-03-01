@@ -1,38 +1,67 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const cors = require('cors');
+const cors = require("cors");
 let allowedOrigins = [
-    'http://localhost:3000',
-    'http://localhost:4200',
-    'http://127.0.0.1',
-    'https://khaidev.vercel.app',
-    'https://lamdev.vercel.app',
-    'https://noflexzone.vercel.app',
-    'https://ponnat.life'
-]
+    "http://localhost:3000",
+    "http://localhost:4200",
+    "http://127.0.0.1",
+    "https://khaidev.vercel.app",
+    "https://lamdev.vercel.app",
+    "https://noflexzone.vercel.app",
+    "https://ponnat.life",
+    "https://khaidev-card.vercel.app",
+];
 var corsOptions = {
     origin: function (origin, callback) {
         if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
-            callback(null, true)
+            callback(null, true);
         } else {
-            callback(new Error('Not allowed by CORS'))
+            callback(new Error("Not allowed by CORS"));
         }
-    }
-}
+    },
+};
 
-router.all('/', (req, res) => {
+router.all("/", (req, res) => {
     res.sendStatus(200);
-})
+});
 
-router.all('/webhook', require(`${process.cwd()}/controllers/discord/webhook`).index);
-router.post('/webhook/send', require(`${process.cwd()}/controllers/discord/webhook`).send);
-router.get('/transcript', require(`${process.cwd()}/controllers/discord/transcript`));
-router.get('/deco', require(`${process.cwd()}/controllers/discord/deco`));
-router.get('/data', cors(corsOptions), require(`${process.cwd()}/controllers/discord/data`).index);
-router.get('/data/avatar/:id', cors(corsOptions), require(`${process.cwd()}/controllers/discord/data`).avatar);
-router.get('/data/badge/:id', cors(corsOptions), require(`${process.cwd()}/controllers/discord/data`).badge);
-router.get('/data/banner/:id', cors(corsOptions), require(`${process.cwd()}/controllers/discord/data`).banner);
-router.get('/data/profile/:id', cors(corsOptions), require(`${process.cwd()}/controllers/discord/data`).profile);
-
+router.all(
+    "/webhook",
+    require(`${process.cwd()}/controllers/discord/webhook`).index,
+);
+router.post(
+    "/webhook/send",
+    require(`${process.cwd()}/controllers/discord/webhook`).send,
+);
+router.get(
+    "/transcript",
+    require(`${process.cwd()}/controllers/discord/transcript`),
+);
+router.get("/deco", require(`${process.cwd()}/controllers/discord/deco`));
+router.get(
+    "/data",
+    cors(corsOptions),
+    require(`${process.cwd()}/controllers/discord/data`).index,
+);
+router.get(
+    "/data/avatar/:id",
+    cors(corsOptions),
+    require(`${process.cwd()}/controllers/discord/data`).avatar,
+);
+router.get(
+    "/data/badge/:id",
+    cors(corsOptions),
+    require(`${process.cwd()}/controllers/discord/data`).badge,
+);
+router.get(
+    "/data/banner/:id",
+    cors(corsOptions),
+    require(`${process.cwd()}/controllers/discord/data`).banner,
+);
+router.get(
+    "/data/profile/:id",
+    cors(corsOptions),
+    require(`${process.cwd()}/controllers/discord/data`).profile,
+);
 
 module.exports = router;

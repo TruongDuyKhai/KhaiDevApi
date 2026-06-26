@@ -1,10 +1,13 @@
 const axios = require("axios");
 const sharp = require("sharp");
-const ffmpeg = require("fluent-ffmpeg");
+const { execFile } = require("child_process");
+const { promisify } = require("util");
+const os = require("os");
+const path = require("path");
+const fs = require("fs");
 const ffmpegPath = require("ffmpeg-static");
-const { PassThrough } = require("stream");
 
-ffmpeg.setFfmpegPath(ffmpegPath);
+const execFileAsync = promisify(execFile);
 
 // Helper: tải ảnh từ URL về Buffer
 const fetchImage = async (url) => {
@@ -12,21 +15,20 @@ const fetchImage = async (url) => {
     return Buffer.from(response.data, "binary");
 };
 
-// Helper: extract frame đầu tiên từ webm → PNG buffer
-const extractWebmFrame = (url) => {
-    return new Promise((resolve, reject) => {
-        const chunks = [];
-        const output = new PassThrough();
-        output.on("data", (d) => chunks.push(d));
-        output.on("end", () => resolve(Buffer.concat(chunks)));
-        output.on("error", reject);
-        ffmpeg(url)
-            .inputOptions(["-ss 0"])
-            .outputOptions(["-vframes 1"])
-            .format("image2pipe")
-            .videoCodec("png")
-            .pipe(output, { end: true });
-    });
+// Helper: extract frame đầu tiên từ webm → PNG buffer (dùng temp file, ổn định hơn pipe)
+const extractWebmFrame = async (url) => {
+    const webmBuffer = await fetchImage(url);
+    const ts = Date.now();
+    const tmpIn = path.join(os.tmpdir(), `nameplate_in_${ts}.webm`);
+    const tmpOut = path.join(os.tmpdir(), `nameplate_out_${ts}.png`);
+    try {
+        fs.writeFileSync(tmpIn, webmBuffer);
+        await execFileAsync(ffmpegPath, ["-i", tmpIn, "-vframes", "1", "-y", tmpOut]);
+        return fs.readFileSync(tmpOut);
+    } finally {
+        try { fs.unlinkSync(tmpIn); } catch {}
+        try { fs.unlinkSync(tmpOut); } catch {}
+    }
 };
 
 // Tính năng gốc: thêm hiệu ứng ánh sáng mờ lên 1 ảnh

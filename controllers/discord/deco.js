@@ -1,10 +1,32 @@
 const axios = require("axios");
 const sharp = require("sharp");
+const ffmpeg = require("fluent-ffmpeg");
+const ffmpegPath = require("ffmpeg-static");
+const { PassThrough } = require("stream");
+
+ffmpeg.setFfmpegPath(ffmpegPath);
 
 // Helper: tải ảnh từ URL về Buffer
 const fetchImage = async (url) => {
     const response = await axios.get(url, { responseType: "arraybuffer" });
     return Buffer.from(response.data, "binary");
+};
+
+// Helper: extract frame đầu tiên từ webm → PNG buffer
+const extractWebmFrame = (url) => {
+    return new Promise((resolve, reject) => {
+        const chunks = [];
+        const output = new PassThrough();
+        output.on("data", (d) => chunks.push(d));
+        output.on("end", () => resolve(Buffer.concat(chunks)));
+        output.on("error", reject);
+        ffmpeg(url)
+            .inputOptions(["-ss 0"])
+            .outputOptions(["-vframes 1"])
+            .format("image2pipe")
+            .videoCodec("png")
+            .pipe(output, { end: true });
+    });
 };
 
 // Tính năng gốc: thêm hiệu ứng ánh sáng mờ lên 1 ảnh
@@ -14,13 +36,9 @@ const decoSingle = async (req, res) => {
         return res.status(400).send("Missing image URL");
     }
 
-    if (imageUrl.endsWith(".webm")) {
-        const response = await axios.get(imageUrl, { responseType: "stream" });
-        res.set("Content-Type", "video/webm");
-        return response.data.pipe(res);
-    }
-
-    const inputBuffer = await fetchImage(imageUrl);
+    const inputBuffer = imageUrl.endsWith(".webm")
+        ? await extractWebmFrame(imageUrl)
+        : await fetchImage(imageUrl);
     const image = sharp(inputBuffer);
     const metadata = await image.metadata();
     const { width, height } = metadata;

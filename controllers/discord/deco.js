@@ -14,6 +14,12 @@ const decoSingle = async (req, res) => {
         return res.status(400).send("Missing image URL");
     }
 
+    if (imageUrl.endsWith(".webm")) {
+        const response = await axios.get(imageUrl, { responseType: "stream" });
+        res.set("Content-Type", "video/webm");
+        return response.data.pipe(res);
+    }
+
     const inputBuffer = await fetchImage(imageUrl);
     const image = sharp(inputBuffer);
     const metadata = await image.metadata();

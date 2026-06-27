@@ -9,33 +9,17 @@ const fetchImage = async (url) => {
 
 // Tính năng gốc: thêm hiệu ứng ánh sáng mờ lên 1 ảnh
 const decoSingle = async (req, res) => {
-    const imageUrl = req.query.image;
-    if (!imageUrl) {
-        return res.status(400).send("Missing image URL");
-    }
-
-    const inputBuffer = await fetchImage(imageUrl);
-    const image = sharp(inputBuffer);
-    const metadata = await image.metadata();
-    const { width, height } = metadata;
-
-    const svgOverlay = `
-      <svg width="${width}" height="${height}">
-        <defs>
-          <radialGradient id="grad" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="white" stop-opacity="0.5"/>
-            <stop offset="100%" stop-color="white" stop-opacity="0"/>
-          </radialGradient>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#grad)"/>
-      </svg>`;
-    const overlayBuffer = Buffer.from(svgOverlay);
-
-    const outputBuffer = await image
-        .composite([{ input: overlayBuffer, blend: "over" }])
+    const type = req.query.type;
+    const imageURL = req.query.image;
+    const buffer2 = await fetchImage(imageURL);
+    const fs = require("fs");
+    const buffer1 = fs.readFileSync(
+        `../../assets/images/${type == 0 ? "avatar" : type == 1 ? "profile" : "nameplate"}.png`,
+    );
+    const outputBuffer = await sharp(buffer1)
+        .composite([{ input: buffer2, blend: "over" }])
         .png()
         .toBuffer();
-
     res.type("image/png");
     res.send(outputBuffer);
 };

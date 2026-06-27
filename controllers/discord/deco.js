@@ -16,8 +16,13 @@ const decoSingle = async (req, res) => {
     const buffer1 = fs.readFileSync(
         `./assets/images/${type == 0 ? "avatar" : type == 1 ? "profile" : "nameplate"}.png`,
     );
+    const { width, height } = await sharp(buffer1).metadata();
+    const resizedBuffer2 = await sharp(buffer2)
+        .resize(width, height, { fit: "cover" })
+        .png()
+        .toBuffer();
     const outputBuffer = await sharp(buffer1)
-        .composite([{ input: buffer2, blend: "over" }])
+        .composite([{ input: resizedBuffer2, blend: "over" }])
         .png()
         .toBuffer();
     res.type("image/png");

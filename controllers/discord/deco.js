@@ -14,7 +14,7 @@ const decoSingle = async (req, res) => {
     const buffer2 = await fetchImage(imageURL);
     const fs = require("fs");
     const buffer1 = fs.readFileSync(
-        `../../assets/images/${type == 0 ? "avatar" : type == 1 ? "profile" : "nameplate"}.png`,
+        `./assets/images/${type == 0 ? "avatar" : type == 1 ? "profile" : "nameplate"}.png`,
     );
     const outputBuffer = await sharp(buffer1)
         .composite([{ input: buffer2, blend: "over" }])

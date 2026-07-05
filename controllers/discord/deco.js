@@ -16,6 +16,22 @@ const decoSingle = async (req, res) => {
     const buffer1 = fs.readFileSync(
         `./assets/images/${type == 0 ? "avatar" : type == 1 ? "profile" : "nameplate"}.png`,
     );
+    // Nameplate (type=2) là banner ngang (448x84), phần trong suốt bên trái
+    // là chỗ dành cho avatar: giữ nguyên khung banner và đặt nameplate.png
+    // vào mép trái thay vì crop banner về hình vuông
+    if (type == 2) {
+        const { height: bannerHeight } = await sharp(buffer2).metadata();
+        const overlay = await sharp(buffer1)
+            .resize(bannerHeight, bannerHeight, { fit: "cover" })
+            .png()
+            .toBuffer();
+        const outputBuffer = await sharp(buffer2)
+            .composite([{ input: overlay, left: 0, top: 0 }])
+            .png()
+            .toBuffer();
+        res.type("image/png");
+        return res.send(outputBuffer);
+    }
     const { width, height } = await sharp(buffer1).metadata();
     const resizedBuffer2 = await sharp(buffer2)
         .resize(width, height, { fit: "cover" })

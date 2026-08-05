@@ -45,25 +45,65 @@ const decoSingle = async (req, res) => {
     res.send(outputBuffer);
 };
 
-// Tính năng mới: ghép 2 ảnh chồng lên nhau (đè ảnh 2 lên ảnh 1)
+// Số nguyên RGB (vd 855309) -> "#rrggbb"
+const intToHex = (n) =>
+    "#" + ((n >>> 0) & 0xffffff).toString(16).padStart(6, "0");
+
+// SVG gradient chéo phủ kín kích thước cho trước, từ danh sách màu
+const gradientSvg = (width, height, hexColors) => {
+    const stops = hexColors
+        .map((c, i) => {
+            const offset =
+                hexColors.length > 1
+                    ? ((i / (hexColors.length - 1)) * 100).toFixed(1)
+                    : 0;
+            return `<stop offset="${offset}%" stop-color="${c}"/>`;
+        })
+        .join("");
+    return Buffer.from(
+        `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">` +
+            `<defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">${stops}</linearGradient></defs>` +
+            `<rect width="100%" height="100%" fill="url(#g)"/></svg>`,
+    );
+};
+
+// Bundle: có image2 -> ghép 2 lớp như cũ; không có image2 nhưng có `colors`
+// (bundle 1 lớp) -> vẽ nền gradient rồi đặt foreground (image1) lên trên.
 const decoBundle = async (req, res) => {
-    const { image1, image2 } = req.query;
-    if (!image1 || !image2) {
-        return res.status(400).send("Missing image1 or image2 URL");
+    const { image1, image2, colors } = req.query;
+    if (!image1) {
+        return res.status(400).send("Missing image1 URL");
+    }
+    const buffer1 = await fetchImage(image1);
+
+    // Bundle 2 lớp: đè image2 lên image1 (giữ nguyên hành vi cũ).
+    if (image2) {
+        const buffer2 = await fetchImage(image2);
+        const outputBuffer = await sharp(buffer1)
+            .composite([{ input: buffer2, blend: "over" }])
+            .png()
+            .toBuffer();
+        res.type("image/png");
+        return res.send(outputBuffer);
     }
 
-    // Tải song song 2 ảnh
-    const [buffer1, buffer2] = await Promise.all([
-        fetchImage(image1),
-        fetchImage(image2),
-    ]);
-
-    // Đè ảnh 2 lên ảnh 1 (blend: over giữ kênh alpha)
-    const outputBuffer = await sharp(buffer1)
-        .composite([{ input: buffer2, blend: "over" }])
+    // Bundle 1 lớp: nền = gradient từ colors, foreground = image1 đặt lên trên.
+    const hexColors = (colors || "")
+        .split(",")
+        .map((s) => parseInt(s.trim(), 10))
+        .filter((n) => Number.isFinite(n))
+        .map(intToHex);
+    if (hexColors.length === 0) {
+        // Không có màu nền -> trả thẳng foreground.
+        res.type("image/png");
+        return res.send(await sharp(buffer1).png().toBuffer());
+    }
+    const { width, height } = await sharp(buffer1).metadata();
+    const bg = await sharp(gradientSvg(width, height, hexColors)).png().toBuffer();
+    const outputBuffer = await sharp(bg)
+        .composite([{ input: buffer1, blend: "over" }])
         .png()
         .toBuffer();
-
     res.type("image/png");
     res.send(outputBuffer);
 };

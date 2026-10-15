@@ -37,8 +37,6 @@ router.get(
     "/transcript",
     require(`${process.cwd()}/controllers/discord/transcript`),
 );
-router.get("/deco", require(`${process.cwd()}/controllers/discord/deco`));
-router.get("/frame", require(`${process.cwd()}/controllers/discord/frame`));
 router.get(
     "/data",
     cors(corsOptions),
